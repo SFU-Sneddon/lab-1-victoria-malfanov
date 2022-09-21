@@ -20,8 +20,8 @@ knitr::opts_chunk$set(echo = TRUE)
 The following code will ensure you have the necessary proxy settings in your ssh config. It also creates a symbolic link (like a shortcut) to the directory that contains the course files. If this is nonsense to you, don't worry about it and just read on. *If you are running this file for the second+ time, then you need to comment out these lines by adding # at the start of both of them.*
 
 ```{bash}
-mkdir ~/MBB243/
-ln -s /local-scratch/course_files/MBB243/ ~/files
+#mkdir ~/MBB243/
+#ln -s /local-scratch/course_files/MBB243/ ~/files
 ```
 
 The first run of the code chunk above (or the first time you knit this document) should automatically generate a link to the folder that contains all of the files required for our course this semester. You don't have to worry about what this is doing, but we do need this section in here for the first run.
@@ -46,11 +46,11 @@ Each RStudio user is given a home directory on the course server under `/localho
 Add R code and Bash code to the two empty code blocks below, respectively, to print out your current working directory. Add a comment to one of the code blocks that is just the full path to your home directory similar to the examples above.
 
 ```{r}
-
+getwd()
 ```
 
 ```{bash, engine.opts='-l'}
-
+pwd
 ```
 ## Other extremely useful bash commands
 
@@ -77,16 +77,18 @@ Let's revisit some of the commands you saw used in class individually. The code 
 * What happens if you change the output file name (after `>>`) to `~/MBB243/out/genotype_head.txt`? Why do you think that is?
 
 ```{bash, engine.opts='-l'}
-head -n 25 /local-scratch/course_files/MBB243/Sneddon_genotypes.txt
+head -n 25 /local-scratch/course_files/MBB243/Sneddon_genotypes.txt > cat ~/MBB243/genotype_head.txt 
 # translation:
 # head: take the first N lines (default is 10 if not specified)
 # -n 5: specifies to take the first 5 lines instead
 # the last bit is the full path to the file we want to use as input for the head command
 # You can save the output you see by "redirecting" STDOUT to a file. 
 
-head -n 25 /local-scratch/course_files/MBB243/Sneddon_genotypes.txt > ~/MBB243/genotype_head.txt
+head -n 25 /local-scratch/course_files/MBB243/Sneddon_genotypes.txt >> cat ~/MBB243/genotype_head.txt 
 
+# the file doesn't exist, because if we used > then it'll create a new file. But since we used >> as well, which will append to an existing file (which doesn't exist).
 ```
+
 
 You should have a few lines of genotype information in a new file named `~/MBB243/genotype_head.txt`. Do you notice any genotypes in there that look "off"? Assuming we wanted to sanity check this whole file for what genotypes exist, we can use a combination the `cut`, `uniq` and `sort` commands (uniq is dumb and only works properly if its input is sorted). The code chunk below does this but uses our smaller file as input for efficiency. The result should be all unique genotypes in that file. What did we do wrong? 
 
@@ -97,9 +99,18 @@ cut -f 4 ~/MBB243/genotype_head.txt | sort | uniq
 #This is probably easier to do at the terminal instead of in the Rmarkdown
 # cut -f 4 ~/MBB243/genotype_head.txt | sort 
 # cut -f 4 ~/MBB243/genotype_head.txt 
-```
+cut -f 4 ~/MBB243/genotype_head.txt 
+cut -f 4 ~/MBB243/genotype_head.txt | sort | uniq
+``` 
+-- 
+AA
+AC
+AG
+CC
+GG
+GT
+TT
 
-## Setting the value of a variable
 
 Basic variables store a single value that can be changed over time within your program. Creating (or "declaring" a new variable is usually coupled with setting it's value. It is common to use a variable to capture or store the output of some other code or a function. Anything that is printed to your screen in Rstudio or shown in the output of your markdown can instead be stored in a variable. Why might we want to do this? Here's an example that we'll use later. The data files that we will use in each lab are all being put in one shared directory on this server:
 
@@ -108,7 +119,7 @@ Basic variables store a single value that can be changed over time within your p
 Do you want to type that whole directory or paste it into your code every time you need to refer to a file there? Me neither! We can instead create a variable that stores that information and use it as a shortcut to represent that path. In bash, here's how we can create a variable named `DATA` and store this information in it. The next few lines show how it can be put to use various ways. This is a bit irrelevant for this directory since we created a symbolic link to it above and that acts as a shortcut but it isn't as versatile. For example, from any working directory, you can use $DATA to refer to that file path but you would need to be in your home directory to use the symbolic link (`files`) or specify the path to that link (`~/files`) if you are in another directory. 
 
 ```{bash, engine.opts='-l'}
-DATA="/local-scratch/course_files/MBB243/" 
+$DATA="/local-scratch/course_~/files/MBB243/" 
 # NOTE: if you aren't using the course server you will need to copy the contents of this directory to whatever computer you are running Rstudio on.
 
 # print the contents of our new variable with the echo command
@@ -134,6 +145,7 @@ Run the following code chunk once then use the RStudio terminal (not the Console
 ```{bash}
 echo "Hello terminal!" >> EMPTY.txt
 echo $(date) >> EMPTY.txt
+cat EMPTY.txt 
 # The redirect operators > and >> are related but have different effects on existing files. It's important that you know the difference. 
 # If you aren't clear, go back to the earlier portion of this document that introduces it and/or ask the TA or instructor. 
 ```
@@ -152,7 +164,11 @@ Be careful here with the distinction between `>` and `>>`. The code should only 
 
 `cat ~/.bash_profile`
 
-**DELETE THIS TEXT AND PUT YOUR NEW CODE CHUNK HERE**
+```source ~/.bashrc
+DATA=/local-scratch/course_files/MBB243/
+echo "source ~/.bashrc" > ~/.bash_profile
+echo "DATA=/local-scratch/course_files/MBB243/" >> ~/.bash_profile
+```
 
 ## Setting a variable in R
 
@@ -233,9 +249,8 @@ To run Python code we always need to ensure we've loaded the `reticulate` R pack
 
 ```{r, eval=FALSE}
 library(reticulate)
-use_python("miniconda3/bin/python")
+use_python("~/miniconda3/bin/python")
 use_condaenv("base")
-
 ```
 
 The next code block simply prints the path to the python executable that is used and then loads and tests some functionality provided by the BioPython library. 
@@ -273,7 +288,7 @@ At the end of every lab, replace TODO with DONE to the left of each task to indi
 |status|task|
 |-|-|
 |DONE|This file has been knit|
-|TODO| My .bashrc file exists|
-|TODO| Miniconda is installed|
-|TODO| I was able to install both Bioconda and samtools using conda|
-|TODO| The last few code chunks that run Python code run without errors when I knit this document|
+|DONE| My .bashrc file exists|
+|DONE| Miniconda is installed|
+|DONE| I was able to install both Bioconda and samtools using conda|
+|DONE| The last few code chunks that run Python code run without errors when I knit this document|
